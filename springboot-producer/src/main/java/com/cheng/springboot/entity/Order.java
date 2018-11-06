@@ -33,7 +33,7 @@ public class Order implements Serializable {
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id = id == null ? null : id.trim();
     }
 
     public String getName() {
@@ -41,7 +41,7 @@ public class Order implements Serializable {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name == null ? null : name.trim();
     }
 
     public String getMessageId() {
@@ -49,6 +49,6 @@ public class Order implements Serializable {
     }
 
     public void setMessageId(String messageId) {
-        this.messageId = messageId;
+        this.messageId = messageId == null ? null : messageId.trim();
     }
 }
