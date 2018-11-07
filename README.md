@@ -1,1 +1,1 @@
-RabbitMQ 与 SpringBoot2.0 整合 
+RabbitMQ Learn
