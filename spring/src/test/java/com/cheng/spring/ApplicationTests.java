@@ -88,4 +88,17 @@ public class ApplicationTests {
 
         rabbitTemplate.send("topic001", "spring.acb", message);
     }
+
+    @Test
+    public void SendMessage4TextTest() {
+
+        // 1. 创建消息
+        MessageProperties messageProperties = new MessageProperties();
+        messageProperties.setContentType("text/plain");
+
+        Message message = new Message("Hello RabbitMQ".getBytes(), messageProperties);
+
+        rabbitTemplate.send("topic001", "spring.abc", message);
+        rabbitTemplate.send("topic002", "rabbit.abc", message);
+    }
 }
