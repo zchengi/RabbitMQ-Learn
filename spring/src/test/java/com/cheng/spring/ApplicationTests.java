@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -16,6 +17,9 @@ public class ApplicationTests {
 
     @Autowired
     private RabbitAdmin rabbitAdmin;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Test
     public void adminTest() {
@@ -48,5 +52,40 @@ public class ApplicationTests {
 
         // 清空队列
         rabbitAdmin.purgeQueue("test.topic.queue", false);
+    }
+
+    @Test
+    public void sendMessageTest() {
+
+        // 1. 创建消息
+        MessageProperties messageProperties = new MessageProperties();
+        messageProperties.getHeaders().put("desc", "消息描述...");
+        messageProperties.getHeaders().put("type", "自定义消息类型...");
+
+        Message message = new Message("Hello RabbitMQ".getBytes(), messageProperties);
+
+        // 2. 发送消息
+        rabbitTemplate.convertAndSend("topic001", "spring.amqp", message,
+                message1 -> {
+                    System.out.println("---------- 添加额外设置 ----------");
+                    message.getMessageProperties().getHeaders().put("desc", "额外修改了哈");
+                    message.getMessageProperties().getHeaders().put("attr", "额外新加的属性");
+                    return message;
+                });
+    }
+
+    @Test
+    public void sendMessageTest2() {
+
+        // 1. 创建消息
+        MessageProperties messageProperties = new MessageProperties();
+        messageProperties.setContentType("text/plain");
+        Message message = new Message("MQ Message...".getBytes(), messageProperties);
+
+        // 2. 发送消息
+        rabbitTemplate.convertAndSend("topic001", "spring.amqp", "Hello Object Message Send...");
+        rabbitTemplate.convertAndSend("topic002", "rabbit.abc", "Hello Object Message Send...");
+
+        rabbitTemplate.send("topic001", "spring.acb", message);
     }
 }
