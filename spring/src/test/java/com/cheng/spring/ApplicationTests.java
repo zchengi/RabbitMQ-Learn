@@ -1,5 +1,9 @@
 package com.cheng.spring;
 
+import com.cheng.spring.entity.Order;
+import com.cheng.spring.entity.Packaged;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.*;
@@ -9,6 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 @RunWith(SpringRunner.class)
@@ -100,5 +107,88 @@ public class ApplicationTests {
 
         rabbitTemplate.send("topic001", "spring.abc", message);
         rabbitTemplate.send("topic002", "rabbit.abc", message);
+    }
+
+    @Test
+    public void sendJsonMessageTest() throws JsonProcessingException {
+
+        Order order = new Order("001", "消息订单", "描述信息");
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(order);
+        System.out.println("order 4 json " + json);
+
+        MessageProperties messageProperties = new MessageProperties();
+        // 这里一定要修改 contentType 为 application/json
+        messageProperties.setContentType("application/json");
+        Message message = new Message(json.getBytes(), messageProperties);
+
+        rabbitTemplate.send("topic001", "spring.order", message);
+    }
+
+    @Test
+    public void sendJavaMessageTest() throws JsonProcessingException {
+
+        Order order = new Order("001", "消息订单", "描述信息");
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(order);
+        System.out.println("order 4 json " + json);
+
+        MessageProperties messageProperties = new MessageProperties();
+        // 这里一定要修改 contentType 为 application/json
+        messageProperties.setContentType("application/json");
+        messageProperties.getHeaders().put("__TypeId__", "com.cheng.spring.entity.Order");
+        Message message = new Message(json.getBytes(), messageProperties);
+
+        rabbitTemplate.send("topic001", "spring.order", message);
+    }
+
+    @Test
+    public void sendMappingMessageTest() throws JsonProcessingException {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        Order order = new Order("001", "消息订单", "描述信息");
+        String json1 = mapper.writeValueAsString(order);
+        System.out.println("order 4 json " + json1);
+
+        MessageProperties messageProperties = new MessageProperties();
+        // 这里一定要修改 contentType 为 application/json
+        messageProperties.setContentType("application/json");
+        messageProperties.getHeaders().put("__TypeId__", "order");
+        Message message = new Message(json1.getBytes(), messageProperties);
+        rabbitTemplate.send("topic001", "spring.order", message);
+
+
+        Packaged packaged = new Packaged("002", "包裹信息", "包裹描述信息");
+        String json2 = mapper.writeValueAsString(packaged);
+        System.out.println("packaged 4 json: " + json2);
+
+        MessageProperties messageProperties2 = new MessageProperties();
+        // 这里一定要修改 contentType 为 application/json
+        messageProperties2.setContentType("application/json");
+        messageProperties2.getHeaders().put("__TypeId__", "packaged");
+        Message message2 = new Message(json2.getBytes(), messageProperties2);
+        rabbitTemplate.send("topic001", "spring.packaged", message2);
+    }
+
+    @Test
+    public void sendExtConverterMessageTest() throws IOException {
+
+        // image
+        /*byte[] body = Files.readAllBytes(Paths.get("C:/", "picture.png"));
+        MessageProperties messageProperties = new MessageProperties();
+        messageProperties.setContentType("image/png");
+        messageProperties.getHeaders().put("extName", "png");
+        Message message = new Message(body, messageProperties);
+        // 如果 exchanged 为空, routingKey 匹配 queue 的名称
+        rabbitTemplate.send("", "image_queue", message);*/
+
+        // pdf
+        byte[] body = Files.readAllBytes(Paths.get("C:/", "223.pdf"));
+        MessageProperties messageProperties = new MessageProperties();
+        messageProperties.setContentType("application/pdf");
+        Message message = new Message(body, messageProperties);
+        // 如果 exchanged 为空, routingKey 匹配 queue 的名称
+        rabbitTemplate.send("", "pdf_queue", message);
     }
 }
